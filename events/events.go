@@ -56,6 +56,7 @@ func (e *Event) AddReminder(message string, at time.Time) {
 }
 
 func (e *Event) RemoveReminder() {
+	e.Reminder.Stop()
 	e.Reminder = nil
 }
 

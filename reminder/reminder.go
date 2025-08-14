@@ -34,5 +34,5 @@ func (r *Reminder) Start() {
 }
 
 func (r *Reminder) Stop() {
-	r.Sent = false
+	r.timer.Stop()
 }

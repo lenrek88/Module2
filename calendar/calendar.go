@@ -53,6 +53,15 @@ func (c *Calendar) SetEventReminder(id string, message string, dateStr string) e
 	return nil
 }
 
+func (c *Calendar) CancelEventReminder(id string) error {
+	e, exists := c.eventsMap[id]
+	if !exists {
+		return fmt.Errorf("event with key %q not found", id)
+	}
+	e.RemoveReminder()
+	return nil
+}
+
 func (c *Calendar) AddEvent(title string, date string, priority string) (*events.Event, error) {
 	e, err := events.NewEvent(title, date, priority)
 	if err != nil {
