@@ -2,11 +2,13 @@ package events
 
 import (
 	"errors"
+	"fmt"
+	"regexp"
+	"time"
+
 	"github.com/araddon/dateparse"
 	"github.com/google/uuid"
 	"github.com/lenrek88/app/reminder"
-	"regexp"
-	"time"
 )
 
 type Event struct {
@@ -45,7 +47,12 @@ func (e *Event) UpdateEvent(title string, date string, priority string) error {
 }
 
 func (e *Event) AddReminder(message string, at time.Time) {
-	e.Reminder = reminder.NewReminder(message, at)
+	startTime := at
+	endTime := time.Now()
+	duration := startTime.Sub(endTime)
+	fmt.Println(duration)
+	e.Reminder = reminder.NewReminder(message, duration)
+	e.Reminder.Start()
 }
 
 func (e *Event) RemoveReminder() {

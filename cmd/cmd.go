@@ -2,11 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/c-bata/go-prompt"
 	"github.com/google/shlex"
 	"github.com/lenrek88/app/calendar"
-	"os"
-	"strings"
 )
 
 type Cmd struct {
@@ -75,8 +76,23 @@ func (c *Cmd) executor(input string) {
 			return
 		}
 
+	case "reminder":
+		if len(parts) < 4 {
+			fmt.Println("Формат: reminder \"ключ события\" \"сообщение напоминания\" \"дата и время\"")
+			return
+		}
+		err := c.calendar.SetEventReminder(parts[1], parts[2], parts[3])
+		if err != nil {
+			fmt.Println("Ошибка создания напоминания:", err)
+		}
 	case "help":
-		fmt.Println("add - Добавить событие \n list - Показать все события \n remove - Удалить событие \n update - Редактировать событие \n help - Показать справку \n exit - Выход из программы")
+		fmt.Println("add - Добавить событие \n" +
+			"list - Показать все события \n" +
+			"remove - Удалить событие \n" +
+			"update - Редактировать событие \n" +
+			"reminder - Добавить напоминание \n" +
+			"help - Показать справку \n" +
+			"exit - Выход из программы")
 
 	case "exit":
 		err := c.calendar.Save()
@@ -98,6 +114,7 @@ func (c *Cmd) completer(d prompt.Document) []prompt.Suggest {
 		{Text: "list", Description: "Показать все события"},
 		{Text: "remove", Description: "Удалить событие"},
 		{Text: "update", Description: "Редактировать событие"},
+		{Text: "reminder", Description: "Добавить напоминание"},
 		{Text: "help", Description: "Показать справку"},
 		{Text: "exit", Description: "Выйти из программы"},
 	}

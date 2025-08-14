@@ -7,17 +7,18 @@ import (
 
 type Reminder struct {
 	Message string
-	At      time.Time
+	At      time.Duration
 	Sent    bool
+	timer   *time.Timer
 }
 
-func NewReminder(message string, at time.Time) *Reminder {
+func NewReminder(message string, at time.Duration) *Reminder {
 	return &Reminder{
 		Message: message,
 		At:      at,
 		Sent:    false,
+		timer:   nil,
 	}
-
 }
 
 func (r *Reminder) Send() {
@@ -26,6 +27,10 @@ func (r *Reminder) Send() {
 	}
 	fmt.Println("Reminder!", r.Message)
 	r.Sent = true
+}
+
+func (r *Reminder) Start() {
+	r.timer = time.AfterFunc(r.At, r.Send)
 }
 
 func (r *Reminder) Stop() {

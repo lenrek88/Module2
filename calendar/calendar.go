@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"github.com/araddon/dateparse"
 	"github.com/lenrek88/app/events"
 	"github.com/lenrek88/app/storage"
@@ -40,11 +41,10 @@ func (c *Calendar) Load() error {
 }
 
 func (c *Calendar) SetEventReminder(id string, message string, dateStr string) error {
-	t, err := dateparse.ParseAny(dateStr)
+	t, err := dateparse.ParseLocal(dateStr)
 	if err != nil {
 		return errors.New("неверный формат даты")
 	}
-
 	e, exists := c.eventsMap[id]
 	if !exists {
 		return fmt.Errorf("event with key %q not found", id)
