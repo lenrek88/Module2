@@ -26,7 +26,13 @@ func (c *Cmd) Run() {
 		c.completer,
 		prompt.OptionPrefix("> "),
 	)
+	go func() {
+		for msg := range c.calendar.Notification {
+			fmt.Println(msg)
+		}
+	}()
 	p.Run()
+
 }
 
 func (c *Cmd) executor(input string) {
@@ -56,7 +62,10 @@ func (c *Cmd) executor(input string) {
 		}
 
 	case "list":
-		c.calendar.ShowEvents()
+		events := c.calendar.GetEvents()
+		for _, e := range events {
+			fmt.Println(e.ID, e.Title, "-", e.StartAt.Format("2006-01-02 15:04"), e.Priority)
+		}
 
 	case "remove":
 		if len(parts) < 2 {
@@ -96,6 +105,7 @@ func (c *Cmd) executor(input string) {
 
 	case "exit":
 		err := c.calendar.Save()
+		close(c.calendar.Notification)
 		if err != nil {
 			fmt.Println("Ошибка сохранения данных", err)
 		}

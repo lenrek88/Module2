@@ -46,12 +46,12 @@ func (e *Event) UpdateEvent(title string, date string, priority string) error {
 	return nil
 }
 
-func (e *Event) AddReminder(message string, at time.Time) {
+func (e *Event) AddReminder(message string, at time.Time, notifier func(string)) {
 	startTime := at
 	endTime := time.Now()
 	duration := startTime.Sub(endTime)
 	fmt.Println(duration)
-	e.Reminder = reminder.NewReminder(message, duration)
+	e.Reminder = reminder.NewReminder(message, duration, notifier)
 	e.Reminder.Start()
 }
 

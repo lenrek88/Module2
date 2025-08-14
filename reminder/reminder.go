@@ -1,23 +1,24 @@
 package reminder
 
 import (
-	"fmt"
 	"time"
 )
 
 type Reminder struct {
-	Message string
-	At      time.Duration
-	Sent    bool
-	timer   *time.Timer
+	Message  string
+	At       time.Duration
+	Sent     bool
+	timer    *time.Timer
+	notifier func(string)
 }
 
-func NewReminder(message string, at time.Duration) *Reminder {
+func NewReminder(message string, at time.Duration, notifier func(string)) *Reminder {
 	return &Reminder{
-		Message: message,
-		At:      at,
-		Sent:    false,
-		timer:   nil,
+		Message:  message,
+		At:       at,
+		Sent:     false,
+		timer:    nil,
+		notifier: notifier,
 	}
 }
 
@@ -25,7 +26,7 @@ func (r *Reminder) Send() {
 	if r.Sent {
 		return
 	}
-	fmt.Println("Reminder!", r.Message)
+	r.notifier(r.Message)
 	r.Sent = true
 }
 

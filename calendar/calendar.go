@@ -11,14 +11,16 @@ import (
 )
 
 type Calendar struct {
-	eventsMap map[string]*events.Event
-	storage   storage.Store
+	eventsMap    map[string]*events.Event
+	storage      storage.Store
+	Notification chan string
 }
 
 func NewCalendar(s storage.Store) *Calendar {
 	return &Calendar{
-		eventsMap: make(map[string]*events.Event),
-		storage:   s,
+		eventsMap:    make(map[string]*events.Event),
+		storage:      s,
+		Notification: make(chan string),
 	}
 }
 
@@ -49,7 +51,7 @@ func (c *Calendar) SetEventReminder(id string, message string, dateStr string) e
 	if !exists {
 		return fmt.Errorf("event with key %q not found", id)
 	}
-	e.AddReminder(message, t)
+	e.AddReminder(message, t, c.Notify)
 	return nil
 }
 
@@ -60,6 +62,10 @@ func (c *Calendar) CancelEventReminder(id string) error {
 	}
 	e.RemoveReminder()
 	return nil
+}
+
+func (c *Calendar) Notify(msg string) {
+	c.Notification <- msg
 }
 
 func (c *Calendar) AddEvent(title string, date string, priority string) (*events.Event, error) {
@@ -85,8 +91,6 @@ func (c *Calendar) EditEvent(id string, title string, date string, priority stri
 	return err
 }
 
-func (c *Calendar) ShowEvents() {
-	for _, e := range c.eventsMap {
-		fmt.Println(e.ID, e.Title, "-", e.StartAt.Format("2006-01-02 15:04"), e.Priority)
-	}
+func (c *Calendar) GetEvents() map[string]*events.Event {
+	return c.eventsMap
 }
