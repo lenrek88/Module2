@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"strings"
-	"sync"
 
 	"github.com/c-bata/go-prompt"
 	"github.com/google/shlex"
@@ -15,8 +14,6 @@ import (
 	"github.com/lenrek88/app/logger"
 	"github.com/lenrek88/app/reminder"
 )
-
-var mu sync.Mutex
 
 type Cmd struct {
 	calendar *calendar.Calendar
