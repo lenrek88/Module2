@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 
-	"github.com/lenrek88/app/calendar"
-	"github.com/lenrek88/app/cmd"
-	"github.com/lenrek88/app/logger"
-	"github.com/lenrek88/app/storage"
+	"github.com/lenrek88/Module2/calendar"
+	"github.com/lenrek88/Module2/cmd"
+	"github.com/lenrek88/Module2/logger"
+	"github.com/lenrek88/Module2/storage"
 )
 
 func main() {

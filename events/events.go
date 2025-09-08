@@ -8,7 +8,7 @@ import (
 
 	"github.com/araddon/dateparse"
 	"github.com/google/uuid"
-	"github.com/lenrek88/app/reminder"
+	"github.com/lenrek88/Module2/reminder"
 )
 
 type Event struct {

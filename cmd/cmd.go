@@ -10,9 +10,9 @@ import (
 
 	"github.com/c-bata/go-prompt"
 	"github.com/google/shlex"
-	"github.com/lenrek88/app/calendar"
-	"github.com/lenrek88/app/logger"
-	"github.com/lenrek88/app/reminder"
+	"github.com/lenrek88/Module2/calendar"
+	"github.com/lenrek88/Module2/logger"
+	"github.com/lenrek88/Module2/reminder"
 )
 
 type Cmd struct {

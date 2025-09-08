@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"github.com/araddon/dateparse"
-	"github.com/lenrek88/app/events"
-	"github.com/lenrek88/app/storage"
+	"github.com/lenrek88/Module2/events"
+	"github.com/lenrek88/Module2/storage"
 )
 
 type Calendar struct {

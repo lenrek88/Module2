@@ -1,4 +1,4 @@
-module github.com/lenrek88/app
+module github.com/lenrek88/Module2
 
 go 1.24.5
 
