@@ -1,5 +1,5 @@
 Calendar
 
-Для установки напишите:
+Install:
 
 go get github.com/lenrek88/Module2@latest
