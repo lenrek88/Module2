@@ -32,8 +32,8 @@ func (c *Cmd) Run() {
 		prompt.OptionPrefix("> "),
 	)
 	go func() {
-		mu.Lock()
-		defer mu.Unlock()
+		//mu.Lock()
+		//defer mu.Unlock()
 		for msg := range c.calendar.Notification {
 			fmt.Println("Reminder!", msg)
 			file, err := os.OpenFile("app.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
