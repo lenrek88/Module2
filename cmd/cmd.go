@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -11,17 +12,21 @@ import (
 	"github.com/c-bata/go-prompt"
 	"github.com/google/shlex"
 	"github.com/lenrek88/app/calendar"
+	"github.com/lenrek88/app/logger"
+	"github.com/lenrek88/app/reminder"
 )
 
 var mu sync.Mutex
 
 type Cmd struct {
 	calendar *calendar.Calendar
+	logger   *Logger
 }
 
 func NewCmd(c *calendar.Calendar) *Cmd {
 	return &Cmd{
 		calendar: c,
+		logger:   &Logger{},
 	}
 }
 
@@ -32,18 +37,8 @@ func (c *Cmd) Run() {
 		prompt.OptionPrefix("> "),
 	)
 	go func() {
-		//mu.Lock()
-		//defer mu.Unlock()
 		for msg := range c.calendar.Notification {
-			fmt.Println("Reminder!", msg)
-			file, err := os.OpenFile("app.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-			if err != nil {
-				log.Fatal("Ошибка открытия файла лога:", err)
-
-			}
-			multiWriter := io.MultiWriter(os.Stdout, file)
-			log.SetOutput(multiWriter)
-			log.Println(msg)
+			c.PrintWithLog("Reminder!" + msg)
 		}
 	}()
 	p.Run()
@@ -53,24 +48,17 @@ func (c *Cmd) Run() {
 func (c *Cmd) executor(input string) {
 	parts, err := shlex.Split(input)
 	if err != nil {
-		log.Println("ошибка разделения строки", err)
+		c.PrintWithLog("error executing command")
 		return
 	}
 	cmd := strings.ToLower(parts[0])
 
-	mu.Lock()
-	defer mu.Unlock()
-	file, err := os.OpenFile("app.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Fatal("Ошибка открытия файла лога:", err)
-	}
-	multiWriter := io.MultiWriter(os.Stdout, file)
-	log.SetOutput(multiWriter)
-
 	switch cmd {
 	case "add":
+		c.logger.AddLogMessage("add command called")
+
 		if len(parts) < 4 {
-			log.Println("Формат: add \"название события\" \"дата и время\" \"приоритет\"")
+			c.PrintWithLog("Формат: add \"название события\" \"дата и время\" \"приоритет\"")
 			return
 		}
 
@@ -79,55 +67,69 @@ func (c *Cmd) executor(input string) {
 		priority := parts[3]
 
 		e, err := c.calendar.AddEvent(title, date, priority)
+
 		if err != nil {
-			log.Println("Ошибка добавления:", err)
+			c.PrintWithLog("failed to add calendar events")
+			logger.Error("failed to add calendar events")
 		} else {
-			log.Println("Событие:", e.Title, "добавлено")
+			c.PrintWithLog("Событие:" + e.Title + "добавлено")
+			logger.Info("\"Событие:\", e.Title, \"добавлено\"")
 		}
 
 	case "list":
+		c.logger.AddLogMessage("list command called")
+
 		events := c.calendar.GetEvents()
 		for _, e := range events {
-			log.Println(e.ID, e.Title, "-", e.StartAt.Format("2006-01-02 15:04"), e.Priority)
+			fmt.Println(e.ID, e.Title, "-", e.StartAt.Format("2006-01-02 15:04"), e.Priority)
 		}
 
 	case "remove":
+		c.logger.AddLogMessage("remove command called")
 		if len(parts) < 2 {
-			log.Println("Формат: remove \"ключ\"")
+			c.PrintWithLog("Формат: remove \"ключ\"")
 			return
 		}
 		c.calendar.DeleteEvent(parts[1])
 
 	case "update":
+		c.logger.AddLogMessage("update command called")
 		if len(parts) < 5 {
-			log.Println("Формат: update \"ключ события\" \"название события\" \"дата и время\" \"приоритет\"")
+			c.PrintWithLog("Формат: update \"ключ события\" \"название события\" \"дата и время\" \"приоритет\"")
 			return
 		}
 		err := c.calendar.EditEvent(parts[1], parts[2], parts[3], parts[4])
 		if err != nil {
-			log.Println("Ошибка редактирования:", err)
+			c.PrintWithLog("Update Error:" + err.Error())
 			return
 		}
 
 	case "reminder":
+		c.logger.AddLogMessage("reminder command called")
+
 		if len(parts) < 4 {
-			log.Println("Формат: reminder \"ключ события\" \"сообщение напоминания\" \"дата и время\"")
+			c.PrintWithLog("Формат: reminder \"ключ события\" \"сообщение напоминания\" \"дата и время\"")
 			return
 		}
 		err := c.calendar.SetEventReminder(parts[1], parts[2], parts[3])
-		if err != nil {
-			log.Println("Ошибка создания напоминания:", err)
+		if errors.Is(err, reminder.ErrEmptyMessage) {
+			c.PrintWithLog("Can't set reminder with empty message")
+		} else {
+			c.PrintWithLog("Ошибка создания напоминания:" + err.Error())
 		}
 	case "help":
-		log.Println("add - Добавить событие \n" +
+		c.logger.AddLogMessage("help command called")
+		fmt.Println("add - Добавить событие \n" +
 			"list - Показать все события \n" +
 			"remove - Удалить событие \n" +
 			"update - Редактировать событие \n" +
 			"reminder - Добавить напоминание \n" +
 			"help - Показать справку \n" +
-			"log - Показать весь лог \n" +
+			"logger - Показать весь лог \n" +
+			"history - Показать историю ввода-вывода \n " +
 			"exit - Выход из программы")
-	case "log":
+	case "logger":
+		c.logger.AddLogMessage("logger command called")
 		file, err := os.Open("app.log")
 		if err != nil {
 			log.Println("Ошибка открытия файла:", err)
@@ -139,7 +141,11 @@ func (c *Cmd) executor(input string) {
 		if err != nil {
 			log.Println("Ошибка чтения файла:", err)
 		}
+	case "history":
+		c.logger.AddLogMessage("ioHistory command called")
+		c.ShowLog()
 	case "exit":
+		c.logger.AddLogMessage("exit command called")
 		err := c.calendar.Save()
 		close(c.calendar.Notification)
 		if err != nil {
@@ -162,7 +168,8 @@ func (c *Cmd) completer(d prompt.Document) []prompt.Suggest {
 		{Text: "update", Description: "Редактировать событие"},
 		{Text: "reminder", Description: "Добавить напоминание"},
 		{Text: "help", Description: "Показать справку"},
-		{Text: "log", Description: "Показать весь лог"},
+		{Text: "logger", Description: "Показать весь лог"},
+		{Text: "history", Description: "Показать историю ввода/вывода"},
 		{Text: "exit", Description: "Выйти из программы"},
 	}
 	return prompt.FilterHasPrefix(suggestions, d.GetWordBeforeCursor(), true)

@@ -1,6 +1,9 @@
 package reminder
 
 import (
+	"errors"
+	"fmt"
+	"strings"
 	"time"
 )
 
@@ -12,14 +15,20 @@ type Reminder struct {
 	notifier func(string)
 }
 
-func NewReminder(message string, at time.Duration, notifier func(string)) *Reminder {
+var ErrEmptyMessage = errors.New("message is empty")
+
+func NewReminder(message string, at time.Duration, notifier func(string)) (*Reminder, error) {
+	if len(strings.TrimSpace(message)) == 0 {
+		return nil, fmt.Errorf("can't create reminder: %w", ErrEmptyMessage)
+	}
+
 	return &Reminder{
 		Message:  message,
 		At:       at,
 		Sent:     false,
 		timer:    nil,
 		notifier: notifier,
-	}
+	}, nil
 }
 
 func (r *Reminder) Send() {

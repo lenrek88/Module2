@@ -51,7 +51,10 @@ func (c *Calendar) SetEventReminder(id string, message string, dateStr string) e
 	if !exists {
 		return fmt.Errorf("event with key %q not found", id)
 	}
-	e.AddReminder(message, t, c.Notify)
+	err = e.AddReminder(message, t, c.Notify)
+	if err != nil {
+		return fmt.Errorf("set reminder failed: %w", err)
+	}
 	return nil
 }
 
