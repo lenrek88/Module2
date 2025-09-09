@@ -51,8 +51,6 @@ func (e *Event) AddReminder(message string, at time.Time, notifier func(string))
 	endTime := time.Now()
 	duration := startTime.Sub(endTime)
 
-	if e.StartAt.Before(startTime) {
-	}
 	r, err := reminder.NewReminder(message, duration, notifier)
 	if err != nil {
 		return fmt.Errorf("can't add reminder to event: %w", err)
@@ -62,9 +60,13 @@ func (e *Event) AddReminder(message string, at time.Time, notifier func(string))
 	return nil
 }
 
-func (e *Event) RemoveReminder() {
+func (e *Event) RemoveReminder() error {
+	if e.Reminder == nil {
+		return errors.New("reminder is nil")
+	}
 	e.Reminder.Stop()
 	e.Reminder = nil
+	return nil
 }
 
 func NewEvent(title string, dateStr string, priority string) (*Event, error) {

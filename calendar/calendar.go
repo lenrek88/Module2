@@ -42,14 +42,18 @@ func (c *Calendar) Load() error {
 	return err
 }
 
-func (c *Calendar) SetEventReminder(id string, message string, dateStr string) error {
+func (c *Calendar) SetEventReminder(title string, message string, dateStr string) error {
+	calculatedID, err := c.GetID(title)
+	if err != nil {
+		return fmt.Errorf("event %q not found", title)
+	}
 	t, err := dateparse.ParseLocal(dateStr)
 	if err != nil {
 		return errors.New("неверный формат даты")
 	}
-	e, exists := c.eventsMap[id]
+	e, exists := c.eventsMap[calculatedID]
 	if !exists {
-		return fmt.Errorf("event with key %q not found", id)
+		return fmt.Errorf("event with key %q not found", calculatedID)
 	}
 	err = e.AddReminder(message, t, c.Notify)
 	if err != nil {
@@ -58,12 +62,19 @@ func (c *Calendar) SetEventReminder(id string, message string, dateStr string) e
 	return nil
 }
 
-func (c *Calendar) CancelEventReminder(id string) error {
-	e, exists := c.eventsMap[id]
-	if !exists {
-		return fmt.Errorf("event with key %q not found", id)
+func (c *Calendar) CancelEventReminder(title string) error {
+	calculatedID, err := c.GetID(title)
+	if err != nil {
+		return fmt.Errorf("event %q not found", title)
 	}
-	e.RemoveReminder()
+	e, exists := c.eventsMap[calculatedID]
+	if !exists {
+		return fmt.Errorf("event with key %q not found", calculatedID)
+	}
+	err = e.RemoveReminder()
+	if err != nil {
+		return fmt.Errorf("remove reminder failed: %w", err)
+	}
 	return nil
 }
 
@@ -72,6 +83,11 @@ func (c *Calendar) Notify(msg string) {
 }
 
 func (c *Calendar) AddEvent(title string, date string, priority string) (*events.Event, error) {
+	for _, event := range c.eventsMap {
+		if event.Title == title {
+			return &events.Event{}, errors.New("the title is repeated")
+		}
+	}
 	e, err := events.NewEvent(title, date, priority)
 	if err != nil {
 		return &events.Event{}, err
@@ -80,17 +96,36 @@ func (c *Calendar) AddEvent(title string, date string, priority string) (*events
 	return e, nil
 }
 
-func (c *Calendar) DeleteEvent(key string) {
-	delete(c.eventsMap, key)
+func (c *Calendar) DeleteEvent(title string) error {
+	calculatedID, err := c.GetID(title)
+	if err != nil {
+		return fmt.Errorf("event %q not found", title)
+	}
+	delete(c.eventsMap, calculatedID)
+	return nil
 
 }
 
-func (c *Calendar) EditEvent(id string, title string, date string, priority string) error {
-	e, exists := c.eventsMap[id]
-	if !exists {
-		return fmt.Errorf("event with key %q not found", id)
+func (c *Calendar) GetID(title string) (string, error) {
+	for _, event := range c.eventsMap {
+		if event.Title == title {
+			return event.ID, nil
+		}
 	}
-	err := e.UpdateEvent(title, date, priority)
+	return "", errors.New("the title not found")
+}
+
+func (c *Calendar) EditEvent(title string, newTitle string, date string, priority string) error {
+	calculatedID, err := c.GetID(title)
+	if err != nil {
+		return fmt.Errorf("event %q not found", title)
+	}
+	e, exists := c.eventsMap[calculatedID]
+
+	if !exists {
+		return fmt.Errorf("event with key %q not found", calculatedID)
+	}
+	err = e.UpdateEvent(newTitle, date, priority)
 	return err
 }
 

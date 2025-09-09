@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"sync"
+	"time"
 )
 
 type Logger struct {
@@ -13,8 +14,9 @@ type Logger struct {
 func (l *Logger) AddLogMessage(message string) {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
-	
-	l.logs = append(l.logs, message)
+	timeNow := time.Now().Format("2006-01-02 15:04")
+
+	l.logs = append(l.logs, timeNow+"     |     "+message)
 }
 
 func (l *Logger) GetLog() []string {
